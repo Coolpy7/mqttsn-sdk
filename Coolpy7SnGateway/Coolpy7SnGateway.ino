@@ -95,7 +95,7 @@ void setup() {
   //正常连接后进入发现服务端所在位置
   //Serial.println(WiFi.subnetMask());
   if (EEPROM.read(hasSvoffset) == 0) {
-    //发现Coolpy6服务器
+    //发现Coolpy7服务器
     Udp.begin(localUdpPort);
     Serial.printf("IP %s, UDP port %d\n", WiFi.localIP().toString().c_str(), localUdpPort);
   } else {
@@ -116,7 +116,7 @@ void setup() {
 }
 
 void loop() {
-  //等待cp6服务器广播服务
+  //等待cp7服务器广播服务
   if (EEPROM.read(hasSvoffset) == 0) {
     int packetSize = Udp.parsePacket();
     if (packetSize)
