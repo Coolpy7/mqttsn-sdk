@@ -52,30 +52,10 @@ void setup() {
   EEPROM.begin(512);
 
   Serial.begin(9600);
-  WiFi.mode(WIFI_STA);
-  Serial.println();
 
   //读取到初始化信息启动
   if (EEPROM.read(wifioffset) == 0) {
-    //启动esptouch及airkiss功能
-    Serial.println("SmartConfig");
-    WiFi.beginSmartConfig();
-    //阻塞等待smartconfig完成
-    while (WiFi.status() != WL_CONNECTED) {
-      delay(1000);
-      Serial.print(".");
-      if (WiFi.smartConfigDone()) {
-        Serial.println("completed");
-        WiFi.stopSmartConfig();
-        //记录新ssid及密码
-        EEPROM.write(wifioffset, 1);
-        EEPROM.commit();
-        eepWrite(ssidoffset, WiFi.SSID().c_str());
-        eepWrite(pwdoffset, WiFi.psk().c_str());
-        //启动系统
-        restart();
-      }
-    }
+   smartConfig();
   } else {
     //使用永久存储中的主路由信号
     Serial.println(String("SSID:") + eepRead(ssidoffset).c_str());
@@ -112,6 +92,28 @@ void setup() {
     // set callback functions
     udpclient.onData(onDataCb);
     udpclient.onReconnect(onReconnectCb);
+  }
+}
+
+void smartConfig()
+{
+  WiFi.mode(WIFI_STA);
+  Serial.println("\r\nCoolpy7 Smartconfig Start");
+  WiFi.beginSmartConfig();
+  while (1)
+  {
+    Serial.print(".");
+    delay(500);
+    if (WiFi.smartConfigDone())
+    {
+      Serial.println("SmartConfig Success");
+      //记录新ssid及密码
+      EEPROM.write(wifioffset, 1);
+      EEPROM.commit();
+      eepWrite(ssidoffset, WiFi.SSID().c_str());
+      eepWrite(pwdoffset, WiFi.psk().c_str());
+      break;
+    }
   }
 }
 
@@ -233,7 +235,7 @@ void loop() {
 
 void onDataCb(ESP8266Client& ct, char *data, unsigned short length)
 {
-  Serial.write(data, length);
+  Serial.write((uint8_t*)data, length);
 }
 
 void onReconnectCb(ESP8266Client& client, sint8 err)
@@ -309,4 +311,3 @@ void parseBytes(const char* str, char sep, byte* bytes, int maxBytes, int base) 
     str++;
   }
 }
-
